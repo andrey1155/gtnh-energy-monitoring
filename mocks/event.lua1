@@ -1,0 +1,41 @@
+local event_mock = {}
+local listeners = {}
+local timerId = 0
+
+function event_mock.listen(name, callback)
+    if not listeners[name] then listeners[name] = {} end
+    listeners[name][#listeners[name] + 1] = callback
+    return #listeners[name]
+end
+
+function event_mock.ignore(name, id)
+    if listeners[name] then
+        listeners[name][id] = nil
+    end
+end
+
+function event_mock.pull(timeout, name)
+    if name == "key_down" then
+        -- Имитация нажатия клавиши
+        return "key_down", 0, "q", 113
+    end
+    if name == "modem_message" then
+        -- Имитация получения сообщения
+        return "modem_message", "mock-local", "mock-remote", 1, 10, '{"Reactor1":{"15 sec":0.45,"5 min":0.43,"1 hour":0.40,"1 day":0.38}}'
+    end
+    return nil
+end
+
+function event_mock.timer(interval, callback, times)
+    timerId = timerId + 1
+    local id = timerId
+    -- Просто вызываем callback сразу для теста
+    callback()
+    return id
+end
+
+function event_mock.cancel(id)
+    return true
+end
+
+return event_mock

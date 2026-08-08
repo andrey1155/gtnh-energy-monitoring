@@ -1,0 +1,71 @@
+-- mocks/serialization.lua
+local serialization = {}
+
+function serialization.serialize(data)
+    local function stringify(val, depth)
+        depth = depth or 0
+        local indent = string.rep("  ", depth)
+        
+        if type(val) == "string" then
+            return '"' .. val:gsub('"', '\\"') .. '"'
+        elseif type(val) == "number" then
+            return tostring(val)
+        elseif type(val) == "boolean" then
+            return tostring(val)
+        elseif type(val) == "nil" then
+            return "nil"
+        elseif type(val) == "table" then
+            local items = {}
+            local isArray = true
+            local maxIdx = 0
+            
+            for k, _ in pairs(val) do
+                if type(k) ~= "number" or k <= 0 or k % 1 ~= 0 then
+                    isArray = false
+                    break
+                end
+                if k > maxIdx then maxIdx = k end
+            end
+            
+            if isArray and #val > 0 then
+                for i = 1, #val do
+                    items[#items + 1] = stringify(val[i], depth + 1)
+                end
+                return "{" .. table.concat(items, ", ") .. "}"
+            else
+                for k, v in pairs(val) do
+                    local key = type(k) == "string" and ('"' .. k .. '"') or stringify(k)
+                    items[#items + 1] = key .. " = " .. stringify(v, depth + 1)
+                end
+                return "{\n" .. indent .. "  " .. table.concat(items, ",\n" .. indent .. "  ") .. "\n" .. indent .. "}"
+            end
+        else
+            return "nil"
+        end
+    end
+    
+    return stringify(data)
+end
+
+function serialization.unserialize(str)
+    local fn, err = loadstring("return " .. str)
+    if fn then
+        local ok, result = pcall(fn)
+        if ok then
+            return result
+        else
+            return nil, result
+        end
+    end
+    return nil, err or "Parse error"
+end
+
+function serialization.serializeObject(obj)
+    return serialization.serialize(obj)
+end
+
+function serialization.unserializeObject(str)
+    return serialization.unserialize(str)
+end
+
+return serialization
