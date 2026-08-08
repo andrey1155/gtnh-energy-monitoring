@@ -139,6 +139,11 @@ while running do
                 
                 term.setCursor(1, 4 + #displayData + 2)
                 io.write("Source: " .. source)
+
+                if retransmit then
+                    modem.broadcast(port, msg)
+                end
+                
             end
         end
     end
