@@ -48,6 +48,18 @@ function react:init(config)
     self.red_side = config.red_side or sides.front
     self.inv_side = config.inv_side or sides.front
     
+    if self.inv_side == nil then
+        self.inv_side = sides.front
+    elseif type(self.inv_side) == "string" then
+        self.inv_side = sides[self.inv_side] or sides.front
+    end
+
+    if self.red_side == nil then
+        self.red_side = sides.front
+    elseif type(self.red_side) == "string" then
+        self.red_side = sides[self.red_side] or sides.front
+    end
+
     -- Таймеры и флаги
     self.reboot_started_at = -1
     self.reboot_time = config.reboot_time or 60
@@ -60,16 +72,12 @@ end
 function react:get_data()
     local proxy = self.proxy
     local data = {}
-    
-    data.heat = self:safe_call(proxy.getHeat, proxy) or 0
-    data.max_heat = self:safe_call(proxy.getMaxHeat, proxy) or 100
-    data.eu_output = self:safe_call(proxy.getReactorEUOutput, proxy) 
-                  or self:safe_call(proxy.getEUOutput, proxy) 
-                  or 0
-    data.active = self:safe_call(proxy.producesEnergy, proxy)
-               or self:safe_call(proxy.isActive, proxy)
-               or false
-    
+
+    data.heat =  helpers.round( proxy.getHeat() )
+    data.max_heat = helpers.round( proxy.getMaxHeat() )
+    data.eu_output = helpers.round( proxy.getReactorEUOutput() )
+    data.active = proxy.producesEnergy()
+
     -- Температура в долях
     data.temp = data.max_heat > 0 and (data.heat / data.max_heat) or 0
     
@@ -88,7 +96,7 @@ end
 -- Генерация сигналов
 function react:get_signals(data)
     local sigs = {}
-     
+         
     if data.eu_output <= 1 then
         table.insert(sigs, "empty")
     end
