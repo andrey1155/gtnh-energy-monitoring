@@ -1,3 +1,6 @@
+local event = require("event")
+local os = require("os")
+
 local helpers = {}
 
 function helpers.round(num)
@@ -32,21 +35,36 @@ function helpers.getAverageRodDamage(invProxy, side)
     return totalDamage / count, count
 end
 
-function helpers.format_reactor(name, eu, temp, avgDmg)
+function helpers.format_reactor(name, eu, temp, avgDmg, rebootCount)
     local name_str = helpers.tostring_safe(name):sub(1, 10)
     local eu_str = string.format("%5d", helpers.round(eu or 0))
     local temp_str = string.format("%3d%%", helpers.round((temp or 0) * 100))
     local dmg_str = string.format("%6d", helpers.round(avgDmg or 0))
 
-    return name_str .. " " .. eu_str .. " " .. temp_str .. " " .. dmg_str
+    local state_str = ""
+
+    if rebootCount < 0 then
+        state_str = "working"
+    else
+        state_str = string.format("%2d", helpers.round( rebootCount ))
+    end
+
+    return name_str .. " " .. eu_str .. " " .. temp_str .. " " .. dmg_str .. " " .. state_str
 end
 
 function helpers.format_header()
-    return "Reactor   | EU/t | T  | AvgDmg"
+    return "Reactor   | EU/t | T  | AvgDmg  | State"
 end
 
 function helpers.format_separator()
-    return string.rep("-", 35)
+    return string.rep("-", 35 + 9)
+end
+
+function helpers.sleep(seconds)
+    local deadline = os.time() + seconds
+    while os.time() < deadline do
+        event.pull(0.1)  -- ждём события или таймаут 0.1с
+    end
 end
 
 return helpers

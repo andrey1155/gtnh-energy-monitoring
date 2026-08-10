@@ -3,6 +3,7 @@ local config = {
     interval = 2,
     broadcast = true,
     targetAddress = nil,
+    rebootTime = 60,
     reactors = {
         {
             type = "react",
@@ -10,6 +11,8 @@ local config = {
             address = "mock-reactor-0001",
             inv_address = "mock-inv-0001",
             inv_side = "front",
+            red_address = "mock-redstone-0001",
+            red_side = "front",
         },
         {
             type = "react",
@@ -17,6 +20,8 @@ local config = {
             address = "mock-reactor-0002",
             inv_address = "mock-inv-0002",
             inv_side = "front",
+            red_address = "mock-redstone-0001",
+            red_side = "front",
         },
     }
 }

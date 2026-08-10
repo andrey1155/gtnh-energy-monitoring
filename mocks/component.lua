@@ -1,3 +1,5 @@
+local redstone = require("mocks.redstone")
+
 local mock_component = {}
 
 -- Хранилище для прокси компонентов
@@ -33,8 +35,8 @@ local defaultComponents = {
         address = "mock-reactor-0002",
         getHeat = function() return 320 end,
         getMaxHeat = function() return 1000 end,
-        getEUOutput = function() return 95 end,
-        getReactorEUOutput = function() return 95 end,
+        getEUOutput = function() return 0 end,
+        getReactorEUOutput = function() return 0 end,
         isActive = function() return true end,
         setActive = function(state) end,
         producesEnergy = function() return true end,
@@ -71,6 +73,7 @@ local defaultComponents = {
             return { name = "item", damage = 0, size = 1 }
         end,
     },
+    redstone = redstone,
 }
 
 -- Регистрация компонентов в proxies

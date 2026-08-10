@@ -31,6 +31,7 @@ if not helpers then
     return
 end
 
+local rebootTime = config.rebootTime or 60
 local port = config.port or 1
 local interval = config.interval or 2
 local broadcast = true
@@ -61,12 +62,22 @@ for _, reactorConfig in ipairs(config.reactors or {}) do
     local dev_type = reactorConfig.type or "react"
     local invAddress = reactorConfig.inv_address
     local invSide = reactorConfig.inv_side
+    local redAddress = reactorConfig.red_address
+    local redSide = reactorConfig.red_side
+
 
     if invSide == nil then
         invSide = sides.front
     elseif type(invSide) == "string" then
         invSide = sides[invSide] or sides.front
     end
+
+    if redSide == nil then
+        redSide = sides.front
+    elseif type(redSide) == "string" then
+        redSide = sides[redSide] or sides.front
+    end
+
 
     if not address then
         print("Skipped '" .. name .. "' - no address")
@@ -92,6 +103,17 @@ for _, reactorConfig in ipairs(config.reactors or {}) do
         end
     end
 
+    local redProxy = nil
+    if redAddress then
+        redProxy = component.proxy(redAddress)
+        if not redProxy then
+            print("Redstone controller '" .. name .. "' not found: " .. redAddress)
+        else
+            redProxy.setOutput(redSide, 15)
+        end
+  
+    end
+
     reactors[#reactors + 1] = {
         name = name,
         address = address,
@@ -99,7 +121,10 @@ for _, reactorConfig in ipairs(config.reactors or {}) do
         type = dev_type,
         invProxy = invProxy,
         invSide = invSide,
-        lastError = nil
+        redProxy = redProxy,
+        redSide = redSide,
+        lastError = nil,
+        rebootStartedAt = -1,
     }
     print("Connected: " .. name .. " (" .. dev_type .. ")")
 
@@ -113,6 +138,7 @@ end
 
 local function getReactorData(reactor)
     local proxy = reactor.proxy
+    local redProxy = reactor.redProxy
     local data = {}
 
     local ok, heat = pcall(function() return proxy.getHeat() end)
@@ -163,6 +189,31 @@ local function getReactorData(reactor)
         data.temp = 0
     end
 
+    local rebootCount = rebootTime - (os.time() - reactor.rebootStartedAt)    
+    reactor.rebootCount = rebootCount
+
+    if reactor.rebootStartedAt ~= -1 and rebootCount > 0 then
+
+    elseif reactor.rebootStartedAt ~= -1 and rebootCount <= 0 then
+        
+        reactor.rebootStartedAt = -1
+        redProxy.setOutput(reactor.redSide, 15)
+
+    elseif proxy.isActive and proxy.getEUOutput then
+
+        local ok_1, euVal  = pcall(function() return proxy.getEUOutput() end)
+        local ok_2, actVal = pcall(function() return proxy.isActive() end)
+        local ok = ok_1 and ok_2
+        
+        if ok then            
+            if actVal and euVal <= 1 then
+                reactor.rebootStartedAt = os.time()
+                redProxy.setOutput(reactor.redSide, 0)
+            end
+        end
+        
+    end
+
     data.timestamp = os.time()
 
     return data
@@ -205,7 +256,8 @@ local function drawDisplay()
                 reactor.name,
                 data.euOutput or 0,
                 data.temp or 0,
-                rods and rods.avgDamage or 0
+                rods and rods.avgDamage or 0,
+                reactor.rebootCount
             )
             io.write(line .. "\n")
         end
@@ -233,7 +285,7 @@ local function sendData()
             _maxHeat = data.maxHeat,
             _euOutput = data.euOutput,
             _active = data.active,
-            _rodAvgDamage = rods.avgDamage or 0,
+            _rodAvgDamage = rods.avgDamage or 101,
         }
 
         if reactor.lastError then
@@ -295,6 +347,10 @@ while running do
 
         sendData()
     end
+end
+
+for _, reactor in ipairs(reactors) do
+    reactor.redProxy.setOutput(reactor.redSide, 0);
 end
 
 term.clear()
