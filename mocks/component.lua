@@ -74,6 +74,69 @@ local defaultComponents = {
         end,
     },
     redstone = redstone,
+    battery1 = {
+        type = "gt_batterybuffer",
+        address = "mock-battery-0001",
+        getBatteryCharge = (function()
+            local start_time = os.time()
+            return function(index)
+                local elapsed = os.time() - start_time
+                if elapsed < 5 then
+                    -- Первые 5 секунд - полный
+                    local charges = { 1000000, 1000000, 1000000, 1000000 }
+                    return charges[index] or nil
+                else
+                    -- После 5 секунд - половина
+                    local charges = { 500000, 500000, 500000, 500000 }
+                    return charges[index] or nil
+                end
+            end
+        end)(),
+        getMaxBatteryCharge = function(index)
+            local max_charges = { 1000000, 1000000, 1000000, 1000000 }
+            return max_charges[index] or nil
+        end,
+        getEUInputAverage = function() return 0 end,
+        getEUOutputAverage = function() return 256 end,
+        getEUStored = function() return 4000000 end,
+        getEUCapacity = function() return 4000000 end,
+    },
+    
+    -- Батарейный буфер 2 (половина заряда)
+    battery2 = {
+        type = "gt_batterybuffer",
+        address = "mock-battery-0002",
+        getBatteryCharge = function(index)
+            local charges = { 1000000, 1000000, 1000000, 1000000 }
+            return charges[index] or nil
+        end,
+        getMaxBatteryCharge = function(index)
+            local max_charges = { 1000000, 1000000, 1000000, 1000000 }
+            return max_charges[index] or nil
+        end,
+        getEUInputAverage = function() return 512 end,
+        getEUOutputAverage = function() return 128 end,
+        getEUStored = function() return 2000000 end,
+        getEUCapacity = function() return 4000000 end,
+    },
+    
+    -- Батарейный буфер 3 (почти пустой)
+    battery3 = {
+        type = "gt_batterybuffer",
+        address = "mock-battery-0003",
+        getBatteryCharge = function(index)
+            local charges = { 50000, 50000, 50000, 50000 }
+            return charges[index] or nil
+        end,
+        getMaxBatteryCharge = function(index)
+            local max_charges = { 1000000, 1000000, 1000000, 1000000 }
+            return max_charges[index] or nil
+        end,
+        getEUInputAverage = function() return 1024 end,
+        getEUOutputAverage = function() return 0 end,
+        getEUStored = function() return 200000 end,
+        getEUCapacity = function() return 4000000 end,
+    },
 }
 
 -- Регистрация компонентов в proxies

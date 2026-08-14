@@ -22,14 +22,13 @@ function Device:init(config)
     self.address = config.address
     self.config = config
     
-    -- Прокси
-    if not self.address then
-        error("Device '" .. self.name .. "' has no address")
-    end
-    
-    self.proxy = component.proxy(self.address)
-    if not self.proxy then
-        error("Cannot create proxy for '" .. self.name .. "' at " .. self.address)
+    if self.address then
+        self.proxy = component.proxy(self.address)
+        if not self.proxy then
+            error("Cannot create proxy for '" .. self.name .. "' at " .. self.address)
+        end
+    else
+        self.proxy = nil
     end
     
     -- Состояние

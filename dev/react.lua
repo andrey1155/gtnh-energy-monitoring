@@ -12,8 +12,8 @@ react.type = "react"
 
 -- Приоритет сигналов (порядок важен)
 react.signal_priority = {
-    "bat_full",
-    "bat_not_full",
+    "full",
+    "charging",
     "empty",
     "start",
     "stop",
@@ -22,7 +22,7 @@ react.signal_priority = {
 -- Таблица переходов
 react.transitions = {
     RUNNING = {
-        bat_full = "IDLE",
+        full = "IDLE",
         empty = "RELOADING",
         stop = "SHUTDOWN"
     },
@@ -30,10 +30,11 @@ react.transitions = {
         start = "RUNNING",
     },
     RELOADING = {
+        full = "IDLE",
         -- по таймауту возвращаемся в RUNNING (особый случай)
     },
     IDLE = {
-        bat_not_full = "RUNNING",
+        charging = "RUNNING",
     },
 
 }
@@ -65,7 +66,8 @@ function react:init(config)
     self.reboot_time = config.reboot_time or 60
     
     -- Начальное состояние
-    self.state = "RUNNING"
+    self.state = nil
+    self:set_state("RUNNING")
 end
 
 -- Сбор данных
@@ -129,7 +131,7 @@ end
 -- Особая логика обновления (для таймера ребута)
 function react:update(signals)
     local new_state = base.update(self, signals)
-    
+
     -- Проверка таймера ребута
     if self.state == "RELOADING" then
         local elapsed = os.time() - self.reboot_started_at
@@ -145,7 +147,7 @@ end
 function react:get_subscriptions()
     return {
         "bat.*.full",
-        "bat.*.not_full",
+        "bat.*.charging",
     }
 end
 

@@ -28,8 +28,25 @@ local config = {
                 red_address = "mock-redstone-0001",
                 red_side = "front",
                 reboot_time = 60,
+            },           
+        },    
+        bat = {
+             {
+                name = "Main buffer",
+                id = "bat_storage",
+                addresses = {
+                    "mock-battery-0002",
+                    "mock-battery-0001",
+                },
+                battery_count = 4,
+                thresholds = {
+                    full = 95,
+                    high = 80,
+                    low = 20,
+                    empty = 5,
+                },
             },
-        },        
+        }
     },
 }
 

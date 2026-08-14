@@ -146,6 +146,7 @@ end
 
 -- Добавить события в очередь
 function Manager:add_events(source_dev, events)
+
     for _, event_str in ipairs(events) do
         table.insert(self.event_queue, {
             source = source_dev.id,
@@ -163,6 +164,7 @@ function Manager:propagate_events()
     
     -- Обрабатываем каждое событие
     for _, event_data in ipairs(self.event_queue) do
+
         local event_str = event_data.event
         -- event_str = "bat.full" или "bat.buffer_1.full"
         
@@ -297,6 +299,16 @@ function Manager:send_signal(device_id, signal_name)
     else
         print("Device '" .. device_id .. "' not found")
     end
+end
+
+function Manager:shutdown_all()
+    for _, dev in ipairs(self.devices) do
+        if dev.type == "react" then
+            table.insert(dev.pending_signals, "stop")
+        end
+    end
+    -- Принудительно обновляем состояния, чтобы применить stop
+    self:update_states()
 end
 
 return Manager

@@ -14,26 +14,6 @@ local helpers = require("lib.helpers")
 local mgr = Manager:new()
 mgr:init(cfg)
 
-local mgr = Manager:new()
-local ok = mgr:init(cfg)
-
-print("Init result: " .. tostring(ok))
-print("Devices count: " .. #mgr.devices)
-
-if #mgr.devices == 0 then
-    print("No devices loaded! Check config.")
-    print("Config devices:")
-    for dev_type, devs in pairs(cfg.devices) do
-        print("  " .. dev_type .. ": " .. #devs .. " configs")
-    end
-    os.sleep(5)
-    return
-end
-
-for i, dev in ipairs(mgr.devices) do
-    print("Device " .. i .. ": " .. dev.name .. " type=" .. dev.type .. " proxy=" .. tostring(dev.proxy))
-end
-
 local net = Net:new(cfg)
 
 local running = true
@@ -73,6 +53,7 @@ end
 
 -- Остановка
 event.ignore("key_down", check_exit)
+mgr:shutdown_all()
 mgr:stop()
 net:close()
 disp:clear()
